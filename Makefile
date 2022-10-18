@@ -9,7 +9,7 @@ ARFLAGS		= rcs
 
 # Variables
 
-CLIENT_HEADERS  = $(wildcard include/mq/*.h)
+CLIENT_HEADERS  = $(wildcard include/mq/*.h include/chat/*.h)
 CLIENT_SOURCES  = $(wildcard src/*.c)
 CLIENT_OBJECTS  = $(CLIENT_SOURCES:.c=.o)
 CLIENT_LIBRARY  = lib/libmq_client.a
@@ -21,9 +21,6 @@ TEST_PROGRAMS   = $(subst tests,bin,$(basename $(TEST_OBJECTS)))
 # Rules
 
 all:	$(CLIENT_LIBRARY)
-
-oldchat: src/old_chat_app.o lib/libmq_client.a
-	$(CC) $(LDFLAGS) -o bin/old_chat_app src/old_chat_app.o lib/libmq_client.a
 
 chat: src/chat_app.o lib/libmq_client.a
 	$(CC) $(LDFLAGS) -o bin/chat_app src/chat_app.o lib/libmq_client.a -lncurses
