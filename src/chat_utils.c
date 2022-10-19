@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ncurses.h>
-#include <sys/epoll.h>
+#include <curses.h>
+// #include <sys/epoll.h>
+#include <unistd.h>
+
 
 #include <unistd.h>
 #include "mq/chat_app.h"
@@ -12,7 +14,10 @@
 void init_curses() {
     initscr();
     scrollok(stdscr,TRUE);
-    if (has_colors() && start_color());
+    if (!has_colors() || start_color()) {
+        fprintf(stderr, "Need colored terminal\n");
+        exit(1);
+    }
     init_pair(1, COLOR_RED, 0);
     init_pair(2, COLOR_YELLOW, 0);
     init_pair(3, COLOR_CYAN, 0);
