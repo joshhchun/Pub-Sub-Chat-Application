@@ -12,7 +12,8 @@
 
 #define BACKSPACE   127
 #define MAX_SUBS    10
-#define MAX_MESSAGES 5
+#define MAX_MESSAGES 100
+#define NUM_COLORS 5
 
 /* Structures */
 typedef struct Node {
@@ -32,11 +33,13 @@ typedef struct Channels {
 } Channels;
 
 enum COLOR {
-    RED,
-    BLUE,
-    CYAN,
-    MAGENTA,
-    GREEN
+    RED = 1,
+    YELLOW = 2,
+    CYAN = 3,
+    MAGENTA = 4,
+    GREEN = 5,
+    BLUE = 6,
+    MENTION = 7
 };
 
 /* Function declarations */
@@ -48,7 +51,9 @@ void print_channels(Channels* channels);
 void save_message(Node* current_chat, char* name, char* temp_buf);
 void free_buffers(Node* curr);
 void free_node(Node* curr);
+unsigned long hash(char* string);
 void init_curses();
+void print_menu();
 
 #endif
 

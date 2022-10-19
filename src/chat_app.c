@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
 	MessageQueue *mq = mq_create(name, host, port);
 	if(!mq){
-		printf("could not create messafe queue\n");
+		fprintf(stderr, "could not create message queue\n");
 		 exit(1);
 	}
 	mq_start(mq);
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	struct epoll_event events[100];
     int epoll_fd = epoll_setup(mq);
     if (epoll_fd < 0) {
-        printw("Error setting up epoll\n");
+        fprintf(stderr, "Error setting up epoll\n");
         exit(1);
     }
     int event_count;
@@ -66,19 +66,16 @@ int main(int argc, char *argv[]) {
 					} else if (!strcmp(input_buffer, "/channels")) {
 					    print_channels(&channel_list);
 					} else if (!strcmp(input_buffer, "/topic")){
-					    attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(CYAN));
+					    attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA));
                         printw("Current topic: %s\n", current_chat->topic);
-					    attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(CYAN));
+					    attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA));
 				    } else if (!strcmp(input_buffer, "/menu")){
-				        attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA));
-					    printw("/subscribe [topic]\n");
-					    printw("/switch [topic]\n");
-					    printw("/unsubscribe [topic]\n");
-					    printw("/topic\n");
-				        attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA));
+				        print_menu();
 				    }  else if (strncmp(input_buffer, "/subscribe", 10) == 0 && strlen(input_buffer) > 10){
 				        if (num_subs == MAX_SUBS) {
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
 				            printw("Cannot subscribe, reached maximum number of subs\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
 				            continue;
 				        } 
                         char* topic = strchr(input_buffer, ' ');
@@ -88,49 +85,61 @@ int main(int argc, char *argv[]) {
                         }
 				        topic++;
 				        if (find_channel(&channel_list, topic)) {
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
 				            printw("Already subscribed to that topic!\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
 				            continue;
 				        }
-				        attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(CYAN) );
+				        attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA) );
 				        printw("SUBSCRIBED TO TOPIC: %s\n", topic);
-				        attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(CYAN));
+				        attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA));
 				        mq_subscribe(mq, topic);
 				        // Increment subs
 				        num_subs++;
 				        // Push topic into channels linked list
 				        if (push_node(&channel_list, topic)) {
-				            printw("Error creating channel\n");
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
+				            printw("Error creating channel, try again\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
 				            num_subs--;
 				            mq_unsubscribe(mq, topic);
 				        }
                     } else if (!strncmp(input_buffer, "/unsubscribe", 12) && strlen(input_buffer) > 12){
                         char* topic = strchr(input_buffer, ' ');
                         if (!topic) {
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             printw("Correct usage: /unsubscribe [topic]\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             continue;
                         }
                         topic++;
                         int deleted = delete_channel(&channel_list, topic);
                         if (!deleted) {
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             printw("You were never subscribed to this channel\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             continue;
                         }
-				        attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(CYAN) );
+				        attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA) );
 				        printw("UNSUBSCRIBED TO TOPIC: %s\n", topic);
-				        attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(CYAN));
+				        attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(MAGENTA));
 				        mq_unsubscribe(mq, topic);
                         num_subs--;
                     }
                     else if (!strncmp(input_buffer, "/switch", 7) && strlen(input_buffer) > 7){
                         char* topic = strchr(input_buffer, ' ');
                         if (!topic) {
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             printw("Correct usage: /switch [topic]\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             continue;
                         }
 				        topic++;
                         Node* switched_channel = find_channel(&channel_list, topic);
                         if (!switched_channel) {
+				            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             printw("You are not subscribed to that topic.\n");
+				            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
                             continue;
                         }
                         // Switch current channel to the newly switched channel
@@ -145,27 +154,32 @@ int main(int argc, char *argv[]) {
             	            *(topic++) = '\0';
             	            char* body = strchr(topic, ' ');
             	            *(body++) = '\0';
-            	            if (!strcmp(msg, name)) {
+            	            // We sent the message
+            	            if (!strcmp(msg, mq->name)) {
             	                attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE));
             	                printw("\r%s", name);
 					            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE));
       		                } else {
-      		                    attron(COLOR_PAIR(RED));
+                                unsigned long color = hash(msg) % NUM_COLORS;
+      		                    attron(COLOR_PAIR(color));
 					            printw("\r%s on ", msg);
 					            attron(A_UNDERLINE | A_BOLD);
-					            printw("%s", topic);
-					            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
+					            printw("%s>", topic);
+					            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(color));
 					        }
-      		                printw("> %-80s\n", body);
+                            // If the message mentions our name, highlight it
+                            if (strstr(body, mq->name)) attron(COLOR_PAIR(MENTION) | A_BOLD);
+      		                printw(" %-80s\n", body);
+      		                attroff(COLOR_PAIR(MENTION) | A_BOLD);
                         }
                         refresh();
                     } 
 				    else {
 				        // Im submitting a message
 					    mq_publish(mq, current_chat->topic, input_buffer);
-      		            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE) );
+      		            attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED) );
                         printw("\r%s>", name);
-      		            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE) );
+      		            attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED) );
                         printw(" %-80s\n", input_buffer);
                         refresh();
 					    char temp_buf[input_index + 1];
@@ -202,13 +216,16 @@ int main(int argc, char *argv[]) {
             	    }
             	    // If the message is to our current topic then just print it (and store in buffer)
                     if (!strcmp(topic, current_chat->topic)) {
-      		            attron(COLOR_PAIR(RED));
+                        int color = (int)hash(name) % NUM_COLORS;
+      		            attron(COLOR_PAIR(color));
 					    printw("\r%s on ", name);
 					    attron(A_UNDERLINE | A_BOLD);
-					    printw("%s", topic);
-					    attroff(A_UNDERLINE | A_BOLD);
-					    attroff(COLOR_PAIR(RED));
-      		            printw("> %-80s\n", body);
+					    printw("%s>", topic);
+					    attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(color));
+                        // If the message mentions our name, highlight it
+                        if (strstr(body, mq->name)) attron(COLOR_PAIR(MENTION) | A_BOLD);
+      		            printw(" %-80s\n", body);
+      		            attroff(COLOR_PAIR(MENTION) | A_BOLD);
                     } 
                     Node* channel = find_channel(&channel_list, topic);
                     if (!channel) {

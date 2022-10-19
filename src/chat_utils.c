@@ -13,11 +13,13 @@ void init_curses() {
     initscr();
     scrollok(stdscr,TRUE);
     if (has_colors() && start_color());
-    init_pair(0, COLOR_RED, 0);
-    init_pair(1, COLOR_BLUE, 0);
-    init_pair(2, COLOR_CYAN, 0);
-    init_pair(3, COLOR_MAGENTA, 0);
-    init_pair(4, COLOR_GREEN, 0);
+    init_pair(1, COLOR_RED, 0);
+    init_pair(2, COLOR_YELLOW, 0);
+    init_pair(3, COLOR_CYAN, 0);
+    init_pair(4, COLOR_MAGENTA, 0);
+    init_pair(5, COLOR_GREEN, 0);
+    init_pair(6, COLOR_BLUE, 0);
+    init_pair(7, COLOR_WHITE, COLOR_YELLOW);
 }
 int epoll_setup(MessageQueue* mq) {
 	// Epoll setup
@@ -128,15 +130,31 @@ Node* find_channel(Channels* channels, char* topic) {
 
 // Function to print all of the current subscriptions
 void print_channels(Channels* channels) {
-	attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(GREEN));
+	attron(A_BOLD | COLOR_PAIR(MAGENTA));
+	printw("--------------------------\n");
+	attron(A_UNDERLINE);
     printw("Channels\n");
 	attroff(A_UNDERLINE);
     for (Node* curr_node = channels->head; curr_node; curr_node = curr_node->next) {
-        printw("%s\n", curr_node->topic);
+        printw("> %s\n", curr_node->topic);
     }
-    attroff(A_BOLD | COLOR_PAIR(GREEN));
+	printw("--------------------------\n");
+    attroff(A_BOLD | COLOR_PAIR(MAGENTA));
 }
 
+void print_menu() {
+	attron(A_BOLD | COLOR_PAIR(MAGENTA));
+	printw("--------------------------\n");
+	attron(A_UNDERLINE);
+	printw("Menu Options:\n");
+	attroff(A_UNDERLINE);
+	printw("/subscribe [topic]\n");
+	printw("/switch [topic]\n");
+	printw("/unsubscribe [topic]\n");
+	printw("/topic\n");
+	printw("--------------------------\n");
+	attroff(A_BOLD | COLOR_PAIR(MAGENTA));
+}
 // Function to free all of the buffers
 void free_buffers(Node* curr) {
     if (!curr) return;
@@ -153,6 +171,14 @@ void free_node(Node* curr) {
     }
     free(curr->buffer_history);
     free(curr);
+}
+/* djb2 hash (http://www.cse.yorku.ca/~oz/hash.html) */
+unsigned long hash(char *str) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++))
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    return hash;
 }
 
 
