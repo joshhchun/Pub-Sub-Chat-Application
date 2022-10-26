@@ -162,13 +162,13 @@ int main(int argc, char* argv[]) {
                 char* body = strchr(topic, ' ');
                 *(body++) = '\0';
                 // We sent the message
+                unsigned long color = hash(name) % NUM_COLORS;
                 if (!strcmp(msg, mq->name)) {
                   attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE));
                   printw("\r%s", name);
                   attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE));
                 }
                 else {
-                  unsigned long color = hash(msg) % NUM_COLORS;
                   attron(COLOR_PAIR(color));
                   printw("\r%s on ", msg);
                   attron(A_UNDERLINE | A_BOLD);
@@ -185,9 +185,9 @@ int main(int argc, char* argv[]) {
             else {
               // Im submitting a message
               mq_publish(mq, current_chat->topic, input_buffer);
-              attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
+              attron(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE));
               printw("\r%s>", name);
-              attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(RED));
+              attroff(A_UNDERLINE | A_BOLD | COLOR_PAIR(BLUE));
               printw(" %-80s\n", input_buffer);
               refresh();
               char temp_buf[input_index + 1];
@@ -226,7 +226,7 @@ int main(int argc, char* argv[]) {
             }
             // If the message is to our current topic then just print it (and store in buffer)
             if (!strcmp(topic, current_chat->topic)) {
-              int color = (int)hash(name) % NUM_COLORS;
+              unsigned long color = hash(name) % NUM_COLORS;
               attron(COLOR_PAIR(color));
               printw("\r%s on ", name);
               attron(A_UNDERLINE | A_BOLD);
