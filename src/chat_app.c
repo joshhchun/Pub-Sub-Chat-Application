@@ -5,12 +5,8 @@
 #include <ctype.h>
 #include <curses.h>
 #include <sys/types.h>
-#include <sys/event.h>
-#include <sys/time.h>
 #include <unistd.h>
-#include <sys/select.h>
-#include <sys/poll.h>
-// #include <sys/epoll.h>
+#include <sys/epoll.h>
 
 /* Main Execution */
 
@@ -40,11 +36,14 @@ int main(int argc, char* argv[]) {
   if (push_node(&channel_list, "general")) exit(1);
   Node* current_chat = channel_list.head;
 
-  struct pollfd fds[2];
-  fds[0].fd = STDIN_FILENO;
-  fds[0].events = POLLIN;
-  fds[1].fd = mq->p[0];
-  fds[1].events = POLLIN;
+  // Epoll setup
+	struct epoll_event events[100];
+  int epoll_fd = epoll_setup(mq);
+  if (epoll_fd < 0) {
+        fprintf(stderr, "Error setting up epoll\n");
+        exit(1);
+  }
+  int event_count;
 
   /* Foreground Thread */
   char   input_buffer[BUFSIZ] = "";
@@ -56,15 +55,10 @@ int main(int argc, char* argv[]) {
     printw("\r> %s", input_buffer);		// Write
     refresh();
     // Poll the input and the message queue
-    int ret = poll(fds, 2, 1000);
-    if (ret < 0) {
-      fprintf(stderr, "select() error\n");
-      break;
-    }
-    else if (ret > 0) {
-      for (int i = 0; i < ret; i++) {
+    event_count = epoll_wait(epoll_fd, events, 100, 30000);
+      for (int i = 0; i < event_count; i++) {
         // Stdin, user is writing
-        if (fds[i].revents & POLLIN && (fds[i].fd == STDIN_FILENO)) {
+        if (!events[i].data.fd) {
           char input_char = 0;
           input_char = getch();
           if (input_char == '\n') {				// Process commands
@@ -215,7 +209,7 @@ int main(int argc, char* argv[]) {
           refresh();
         }
         // Someone else sent a message, display it
-        else if (fds[i].revents & POLLIN && fds[i].fd == mq->p[0]) {
+        else if (events[i].data.fd == mq->p[0]) {
           // Read the dummy message
           read(mq->p[0], inbuf, 17);
           // Pop message from incoming
@@ -253,7 +247,6 @@ int main(int argc, char* argv[]) {
           }
         }
       }
-    }
     refresh();
   }
   // close(kq);
