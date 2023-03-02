@@ -11,21 +11,17 @@
 
 /* Constants */
 
-#define BACKSPACE   127
-#define MAX_SUBS    10
+#define BACKSPACE    127
+#define MAX_SUBS     10
 #define MAX_MESSAGES 100
-#define NUM_COLORS 5
+#define NUM_COLORS   5
 
 /* Structures */
 typedef struct Node {
-    // String that holds the topic of the buffer
-    char *topic;
-    // Read and write index for the  buffer
-    int read;
-    int write;
-    // Buffer to hold the messages of a topic
-    char **buffer_history;
-    // Pointer of the next buffer
+    char   *topic;
+    int    read;
+    int    write;
+    char   **buffer_history;
     struct Node* next;
 } Node;
 
@@ -34,27 +30,27 @@ typedef struct Channels {
 } Channels;
 
 enum COLOR {
-    RED = 1,
-    YELLOW = 2,
-    CYAN = 3,
+    RED     = 1,
+    YELLOW  = 2,
+    CYAN    = 3,
     MAGENTA = 4,
-    GREEN = 5,
-    BLUE = 6,
+    GREEN   = 5,
+    BLUE    = 6,
     MENTION = 7
 };
 
 /* Function declarations */
-int epoll_setup(MessageQueue* mq);
-int push_node(Channels* channels, char* topic);
-int delete_channel(Channels* channels, char* topic);
-Node* find_channel(Channels* channels, char* topic);
-void print_channels(Channels* channels);
-void save_message(Node* current_chat, char* name, char* temp_buf);
-void free_buffers(Node* curr);
-void free_node(Node* curr);
-unsigned long hash(char* string);
-void init_curses();
-void print_menu();
+int             epoll_setup(MessageQueue* mq);
+int             push_node(Channels* channels, char* topic);
+int             delete_channel(Channels* channels, char* topic);
+Node*           find_channel(Channels* channels, char* topic);
+void            print_channels(Channels* channels);
+void            save_message(Node* current_chat, char* name, char* temp_buf);
+void            free_buffers(Node* curr);
+void            free_node(Node* curr);
+unsigned long   hash(char* string);
+void            init_curses();
+void            print_menu();
 
 #endif
 

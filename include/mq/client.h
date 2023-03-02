@@ -21,8 +21,6 @@ struct MessageQueue {
     Queue*  incoming;		// Requests received from server
     bool    shutdown;		// Whether or not to shutdown
     int p[2];                // Pipe for communication main chat program
-
-    // TODO: Add any necessary thread and synchronization primitives
 };
 
 MessageQueue *	mq_create(const char *name, const char *host, const char *port);
@@ -40,5 +38,3 @@ void		mq_stop(MessageQueue *mq);
 bool		mq_shutdown(MessageQueue *mq);
 
 #endif
-
-/* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

@@ -23,5 +23,3 @@
     fprintf(stderr, "[%09lu] ERROR " M "\n", pthread_self(), ##__VA_ARGS__)
 
 #endif
-
-/* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

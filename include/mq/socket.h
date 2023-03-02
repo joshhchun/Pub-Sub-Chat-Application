@@ -11,4 +11,3 @@ FILE *  socket_connect(const char *host, const char *port);
 
 #endif
 
-/* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

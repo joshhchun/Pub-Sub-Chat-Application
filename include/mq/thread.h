@@ -40,5 +40,3 @@ typedef pthread_cond_t              Cond;
 #define cond_signal(c)              PTHREAD_CHECK(pthread_cond_signal(c))
 
 #endif
-
-/* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

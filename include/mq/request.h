@@ -23,5 +23,3 @@ void	    request_delete(Request *r);
 void        request_write(Request *r, FILE *fs);
 
 #endif
-
-/* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */
